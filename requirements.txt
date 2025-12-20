@@ -3,3 +3,6 @@ sqlalchemy[asyncio]
 alembic
 asyncpg
 python-dotenv
+sqlglot
+ollama
+pytest
