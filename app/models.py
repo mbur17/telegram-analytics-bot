@@ -5,7 +5,7 @@ from sqlalchemy import BigInteger, DateTime, ForeignKey, Index, String
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 
-from const import DEFAULT_ZERO, MAX_CREATOR_ID, MAX_SNAP_ID, MAX_VID_ID
+from app.const import DEFAULT_ZERO, MAX_CREATOR_ID, MAX_SNAP_ID, MAX_VID_ID
 
 
 class Base(DeclarativeBase):
@@ -47,7 +47,6 @@ class TimeStampMixin():
 
 
 class Video(Base, CountMixin, TimeStampMixin):
-    """Model for video statistics."""
     __tablename__ = 'videos'
 
     id: Mapped[str] = mapped_column(String(MAX_VID_ID), primary_key=True)
@@ -70,7 +69,6 @@ class Video(Base, CountMixin, TimeStampMixin):
 
 
 class VideoSnapshot(Base, CountMixin, TimeStampMixin):
-    """Model for hourly video snapshots."""
     __tablename__ = 'video_snapshots'
 
     id: Mapped[str] = mapped_column(String(MAX_SNAP_ID), primary_key=True)
