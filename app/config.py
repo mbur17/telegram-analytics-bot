@@ -12,19 +12,19 @@ class Settings:
         'DATABASE_URL',
         'postgresql+asyncpg://user:password@localhost:5432/video_analytics'
     )
-    # LLM Configuration
-    LLM_PROVIDER: str = os.getenv('LLM_PROVIDER', 'anthropic')
-    ANTHROPIC_API_KEY: str = os.getenv('ANTHROPIC_API_KEY', '')
-    LLM_MODEL: str = os.getenv('LLM_MODEL', 'claude-sonnet-4-20250514')
+    # Ollama settings
+    OLLAMA_BASE_URL: str = os.getenv(
+        'OLLAMA_BASE_URL', 'http://localhost:11434'
+    )
+    OLLAMA_MODEL: str = os.getenv('OLLAMA_MODEL', 'sqlcoder:7b')
 
     def validate(self):
-        """Validate that required settings are present."""
         if not self.TELEGRAM_BOT_TOKEN:
             raise ValueError('TELEGRAM_BOT_TOKEN is required')
-        if not self.ANTHROPIC_API_KEY:
-            raise ValueError(
-                'ANTHROPIC_API_KEY is required when using Anthropic'
-            )
+        if not self.OLLAMA_BASE_URL:
+            raise ValueError('OLLAMA_BASE_URL is required')
+        if not self.OLLAMA_MODEL:
+            raise ValueError('OLLAMA_MODEL is required')
 
 
 settings = Settings()
