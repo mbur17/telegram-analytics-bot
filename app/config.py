@@ -31,7 +31,7 @@ class Settings:
         self.OLLAMA_BASE_URL = os.getenv(
             'OLLAMA_BASE_URL', 'http://ollama.com'
         )
-        self.OLLAMA_MODEL = os.getenv('OLLAMA_MODEL', 'sqlcoder:latest')
+        self.OLLAMA_MODEL = os.getenv('OLLAMA_MODEL', 'qwen3-coder:480b-cloud')
         self.OLLAMA_API_KEY = os.getenv('OLLAMA_API_KEY', '')
         self.validate()
 
