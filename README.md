@@ -9,7 +9,7 @@ Telegram-бот для аналитики видео с использовани
 - [Aiogram](https://github.com/aiogram/aiogram) - Telegram Bot framework
 - [SQLAlchemy](https://www.sqlalchemy.org/) - SQL toolkit для Python
 - [PosgreSQL](https://www.postgresql.org/) - База данных
-
+- [Redis](https://github.com/redis/redis) - In-memory кэш для SQL-результатов
   
 
 ## Структура проекта
@@ -21,6 +21,7 @@ app/
 │   ├── bot.py
 │   ├── config.py
 │   ├── db.py
+│   ├── cache.py
 │   ├── const.py
 │   ├── llm_processor.py
 │   └── models.py
@@ -35,6 +36,14 @@ app/
 ├── init-db.sh
 ├── requirements.txt
 └── .env
+
+# init-db.sh - cкрипт инициализации базы данных.
+# Используется для:
+# 1. Создания read-only пользователя базы данных (POSTGRES_READONLY_USER),
+#    который используется Telegram-ботом.
+# 2. Назначения прав только на чтение (SELECT) для всех таблиц схемы.
+
+# db.json — дамп базы данных проекта.
 ```
 
 ## Быстрый старт
@@ -95,12 +104,17 @@ OLLAMA_BASE_URL=https://ollama.com
 OLLAMA_MODEL=qwen3-coder:480b-cloud # only cloud models required
 OLLAMA_IMAGE=ollama/ollama:latest
 OLLAMA_API_KEY=your_ollama_api_key_here
+
+# Redis
+REDIS_URL=redis://redis:6379/0
+CACHE_TTL=86400
 ```
  
 ## Docker сервисы
 
 ```yaml
 services:
+  redis:         # Redis 7 (кэш)
   postgres:      # PostgreSQL 16
   migrations:    # Применение миграций (admin user)
   data-loader:   # Загрузка данных (admin user)
@@ -116,37 +130,33 @@ services:
 │ Telegram    │
 │ User        │
 └──────┬──────┘
-       │ "Сколько видео набрало 100k просмотров?"
        ▼
 ┌───────────────────────────────┐
 │ Telegram Bot (aiogram)        │
-│ - Принимает текст на русском  │
-│ - Отправляет в LLM processor  │
 └──────┬────────────────────────┘
        ▼
+┌───────────────────────────────┐
+│ Redis Cache                   │
+│ - NL → SQL                    │
+│ - SQL → Result                │
+└──────┬───────────────┬────────┘
+       │ cache hit     │ cache miss
+       ▼               ▼
 ┌───────────────────────────────┐
 │ LLM Processor                 │
-│ - Преобразует NL → SQL        │
-│ - Отправляет промпт в Ollama  │
-│   Cloud API с API Key         │
-└──────┬────────────────────────┘
-       ▼
-┌───────────────────────────────┐
-│ Ollama Cloud + Qwen3-Coder    │
-│ - Coding модель               │
-│ - Генерирует SQL запрос       │
+│ (Ollama Cloud)                │
 └──────┬────────────────────────┘
        ▼
 ┌───────────────────────────────┐
 │ SQL Validator                 │
-│ - Проверка: только SELECT     │
-│ - Блокирует DROP/DELETE/UPDATE│
 └──────┬────────────────────────┘
        ▼
 ┌───────────────────────────────┐
 │ PostgreSQL (readonly user)    │
-│ - Выполняет SELECT запрос     │
-│ - Возвращает результат        │
+└──────┬────────────────────────┘
+       ▼
+┌───────────────────────────────┐
+│ Redis Cache (store result)    │
 └──────┬────────────────────────┘
        ▼
 ┌───────────────────────────────┐
@@ -246,6 +256,13 @@ db.init(use_admin=False)
 - Две таблицы: `videos` и `video_snapshots`
 - Индексы для оптимизации запросов
 
+#### 5. **Cache Layer** (`app/cache.py`)
+
+- Redis 7 (in-memory)
+- Асинхронный клиент
+- TTL для всех ключей
+- Кэширования результатов SQL-запросов
+
 
 ## 🔐 Безопасность
 
@@ -269,6 +286,12 @@ db.init(use_admin=False)
 ### Многоуровневая защита
 
 ```
+┌─────────────────────────────────────┐
+│ Уровень 0: Redis Cache              │
+│ - Повторные запросы не доходят      │
+│ до LLM и БД                         │
+└─────────────┬───────────────────────┘
+              ▼
 ┌─────────────────────────────────────┐
 │ Уровень 1: SQL Validator (Python)   │
 │ - Блокирует не-SELECT запросы       │

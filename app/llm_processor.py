@@ -36,6 +36,12 @@ CREATE TABLE video_snapshots (
     created_at TIMESTAMP WITH TIME ZONE NOT NULL,
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL
 );
+
+CREATE INDEX idx_videos_creator_id ON videos(creator_id);
+CREATE INDEX idx_videos_video_created_at ON videos(video_created_at);
+CREATE INDEX idx_video_snapshots_video_id ON video_snapshots(video_id);
+CREATE INDEX idx_video_snapshots_created_at ON video_snapshots(created_at);
+CREATE INDEX idx_video_snapshots_video_created ON video_snapshots(video_id, created_at);
 '''  # noqa: E501
 
 
@@ -138,10 +144,8 @@ Important rules:
                 prompt=prompt,
                 stream=False
             )
-            logger.warning('RAW LLM RESPONSE:\n%s', response)
             raw_text = response.get('response', '')
             sql = self._clean_sql_response(raw_text)
-            logger.warning('CLEANED SQL:\n%s', sql)
             if not self.validate_sql(sql):
                 raise ValueError('Generated SQL query failed validation')
             logger.info(f'Generated SQL: {sql}')

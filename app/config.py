@@ -27,6 +27,9 @@ class Settings:
         self.POSTGRES_DB = os.getenv('POSTGRES_DB', 'video_analytics')
         self.POSTGRES_HOST = os.getenv('POSTGRES_HOST', 'postgres')
         self.POSTGRES_PORT = int(os.getenv('POSTGRES_PORT', '5432'))
+        # Redis
+        self.REDIS_URL = os.getenv('REDIS_URL', 'redis://redis:6379/0')
+        self.CACHE_TTL = int(os.getenv('CACHE_TTL', '86400'))
         # Ollama
         self.OLLAMA_BASE_URL = os.getenv(
             'OLLAMA_BASE_URL', 'http://ollama.com'
@@ -49,6 +52,8 @@ class Settings:
             'POSTGRES_DB': self.POSTGRES_DB,
             'POSTGRES_HOST': self.POSTGRES_HOST,
             'POSTGRES_PORT': self.POSTGRES_PORT,
+            'REDIS_URL': self.REDIS_URL,
+            'CACHE_TTL': self.CACHE_TTL,
         }
         missing = [name for name, value in required_vars.items() if not value]
         if missing:

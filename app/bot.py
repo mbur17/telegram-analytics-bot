@@ -7,6 +7,7 @@ from aiogram.types import Message
 
 from app.config import settings
 from app.db import db
+from app.cache import cache
 from app.llm_processor import llm_processor
 
 logging.basicConfig(
@@ -47,6 +48,12 @@ async def cmd_help(message: Message):
     )
 
 
+@dp.message(Command('clear_cache'))
+async def cmd_clear_cache(message: Message):
+    await cache.clear()
+    await message.answer('Кэш очищен!')
+
+
 @dp.message(F.text)
 async def process_query(message: Message):
     """Process natural language query."""
@@ -54,15 +61,24 @@ async def process_query(message: Message):
     if not user_query:
         await message.answer('Пожалуйста, задайте вопрос')
         return
+    logger.info(f'User query from {message.from_user.id}: {user_query}')
     await bot.send_chat_action(message.chat.id, 'typing')
-
     try:
-        logger.info(f'User query from {message.from_user.id}: {user_query}')
+        # Check cache first
+        cached_result = await cache.get(user_query)
+        if cached_result is not None:
+            await message.answer(f'{cached_result}')
+            logger.info(f'Returned cached result: {cached_result}')
+            return
+        # Convert natural language to SQL
         sql_query = await llm_processor.text_to_sql(user_query)
+        # Execute SQL query
         result = await db.execute_raw_query(sql_query)
+        # Cache the result
+        await cache.set(user_query, result)
+        # Send result
         await message.answer(f'{result}')
         logger.info(f'Query result: {result}')
-
     except ValueError as e:
         logger.error(f'Validation error: {e}')
         await message.answer(
@@ -81,12 +97,14 @@ async def on_startup():
     logger.info('Starting bot...')
     settings.validate()
     db.init()
+    await cache.connect()
     logger.info('Bot started successfully')
 
 
 async def on_shutdown():
     logger.info('Shutting down bot...')
     await db.close()
+    await cache.close()
     await bot.session.close()
     logger.info('Bot shut down successfully')
 
