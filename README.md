@@ -1,6 +1,6 @@
-# Telegram Video Analytics Bot
+# Telegram Analytics Bot (Text-to-SQL)
 
-Telegram-бот для аналитики видео с использованием естественного языка (русский). Преобразует текстовые вопросы в SQL-запросы с помощью **cloud LLM модели qwen3-coder** через Ollama API.
+Telegram-бот для аналитики с использованием естественного языка. Преобразует текстовые вопросы в SQL-запросы с помощью **cloud LLM модели qwen3-coder** через Ollama API.
 
 ## Технологии
 
