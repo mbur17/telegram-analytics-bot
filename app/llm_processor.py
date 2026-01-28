@@ -46,7 +46,7 @@ CREATE INDEX idx_video_snapshots_video_created ON video_snapshots(video_id, crea
 
 
 class LLMProcessor:
-    """Process natural language queries using Ollama + qwen3-coder."""
+    """Process natural language queries."""
 
     def __init__(self):
         self.model = settings.OLLAMA_MODEL
@@ -134,7 +134,7 @@ Important rules:
         return True
 
     async def text_to_sql(self, user_query: str) -> str:
-        """Convert natural language query to SQL using Ollama + SQLCoder."""
+        """Convert natural language query to SQL."""
         logger.info(f'Processing query: {user_query}')
         try:
             prompt = self._build_prompt(user_query)
