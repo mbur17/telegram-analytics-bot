@@ -48,6 +48,8 @@ app/
 
 ## Быстрый старт
 
+На примере аналитики видео-роликов
+
 ### Требования
 -   Docker и Docker Compose
 -   Telegram Bot Token ([@BotFather](https://t.me/BotFather))
@@ -65,13 +67,13 @@ cp .env.example .env
 
 # 3. Положить данные и запустить
 mkdir -p data
-cp /path/to/videos.json data/
+cp /path/to/db.json data/
 docker-compose up -d
 ```
 **Готово!**
 - Запустится PostgreSQL
 - Применятся миграции БД
-- Загрузятся данные из `videos.json`
+- Загрузятся данные из `db.json`
 - Запустится бот
 
   
@@ -86,22 +88,22 @@ docker-compose up -d
 # Telegram Bot
 TELEGRAM_BOT_TOKEN=your_bot_token_here
 
-# PostgreSQL - Admin credentials for migrations and data load
+# PostgreSQL - Админ юзер
 POSTGRES_ADMIN_USER=admin
 POSTGRES_ADMIN_PASSWORD=admin_password
 
-# PostgreSQL - Readonly credentials for bot
+# PostgreSQL - Юзер только для чтения
 POSTGRES_READONLY_USER=readonly_user
 POSTGRES_READONLY_PASSWORD=readonly_password
 
-# PostgreSQL - Common settings
+# PostgreSQL - Основные настройки
 POSTGRES_DB=video_analytics
 POSTGRES_HOST=postgres
 POSTGRES_PORT=5432
 
-# Ollama Configuration
+# Ollama конфигурация
 OLLAMA_BASE_URL=https://ollama.com
-OLLAMA_MODEL=qwen3-coder:480b-cloud # only cloud models required
+OLLAMA_MODEL=qwen3-coder:480b-cloud # требуется облачная модель
 OLLAMA_IMAGE=ollama/ollama:latest
 OLLAMA_API_KEY=your_ollama_api_key_here
 
@@ -264,11 +266,11 @@ db.init(use_admin=False)
 - Кэширования результатов SQL-запросов
 
 
-## 🔐 Безопасность
+## Безопасность
 
   
 
-### Разделение полномочий (Principle of Least Privilege)
+### Разделение полномочий
 
 Проект использует **два PostgreSQL пользователя**:
 
